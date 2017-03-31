@@ -21,8 +21,6 @@ type Template interface {
 	Parse(tmpl string) (Template, error)
 
 	Execute() string
-
-	ErrorContext(node parse.Node) (location, context string)
 }
 
 type FuncMap map[string]interface{}
@@ -45,30 +43,30 @@ func (t *template) Funcs(funcs FuncMap) Template {
 
 func (t *template) Parse(tmpl string) (Template, error) {
 
-	tree, err := parse.Parse(t.name, tmpl, leftDelim, rightDelim, t.parseFuncs)
+	treeMap, err := parse.Parse(t.name, tmpl, leftDelim, rightDelim, t.parseFuncs)
 
 	if err != nil {
 		return nil, err
 	}
 
-	t.parsedTemplate = tree[t.name]
-	//
-	//var buffer bytes.Buffer
-	//
-	//startIdnex := strings.Index(tmpl, leftDelim)
-	//endIdnex := strings.Index(tmpl, rightDelim)
-	//
-	//buffer.WriteString(tmpl[0:startIdnex])
-	//
-	//equation := tmpl[startIdnex:endIdnex]
-	//noDelimEquation := tmpl[startIdnex + len(leftDelim) : endIdnex + len(rightDelim)]
-	//
-	//t.process(noDelimEquation)
-	//
-	//buffer.WriteString(equation)
-	//buffer.WriteString(tmpl[endIdnex:])
-	//
-	//t.parsedTemplate = buffer
+	tree := treeMap[t.name]
+	root := tree.Root
+
+	//for k, v := range treeMap {
+	//	fmt.Println("key:", k)
+	//	fmt.Println("val:", v)
+		fmt.Println("============================================")
+		//root := v.Root
+		fmt.Println("root:", root)
+		fmt.Println("============================================")
+
+		for i, n := range root.Nodes {
+			fmt.Println("n", i, ":", n)
+			//fmt.Println("type", n.Type())
+			printNodeStuff(n)
+		}
+	//}
+
 
 	return t, nil
 }
@@ -76,20 +74,6 @@ func (t *template) Parse(tmpl string) (Template, error) {
 func (t *template) Execute() string {
 	buffer := new(bytes.Buffer)
 
-	type foo struct {
-
-	}
-
-	value := reflect.ValueOf(&foo{})
-	state := &state{
-		tmpl: t,
-		wr:   buffer,
-		vars: []variable{{"$", value}},
-	}
-	if t.parsedTemplate == nil || t.parsedTemplate.Root == nil {
-		state.errorf("%q is an incomplete or empty template%s", t.Name(), "dsadsadsa")
-	}
-	state.walk(value, t.parsedTemplate.Root)
 
 
 	return buffer.String()
@@ -99,35 +83,27 @@ func (t *template) Name() string  {
 	return t.name
 }
 
-func (t *template) ErrorContext(node parse.Node) (location, context string)  {
 
-	//pos := int(n.Position())
-	//tree := n.tree()
-	//if tree == nil {
-	//	tree = t
-	//}
-	//text := tree.text[:pos]
-	//byteNum := strings.LastIndex(text, "\n")
-	//if byteNum == -1 {
-	//	byteNum = pos // On first line.
-	//} else {
-	//	byteNum++ // After the newline.
-	//	byteNum = pos - byteNum
-	//}
-	//lineNum := 1 + strings.Count(text, "\n")
-	//context = n.String()
-	//if len(context) > 20 {
-	//	context = fmt.Sprintf("%.20s...", context)
-	//}
-	return fmt.Sprintf("foooo"), context
-	//return
+
+func printNodeStuff(node parse.Node) {
+	switch n := node.(type) {
+	case *parse.ActionNode:
+		//fmt.Println("line", n.Line)
+		//fmt.Println("pos", n.Pos)
+		//fmt.Println("pipe", n.Pipe)
+
+		for i, cmd := range n.Pipe.Cmds{
+			fmt.Println("pipe cmd",i,cmd)
+			fmt.Println("pipe cmd args",i,cmd.Args)
+		}
+
+		for i, cmd := range n.Pipe.Decl{
+			fmt.Println("pipe decl indent",i,cmd.Ident)
+		}
+		return
+	}
 }
 
-func (t *template) process(equation string) {
-	//noDelimEqu := stripDelims(equation)
-	// t.parseFuncs[equation]
-
-}
 
 // length returns the length of the item, with an error if it has no defined length.
 func length(item interface{}) (int, error) {

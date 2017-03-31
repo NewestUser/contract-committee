@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"unsafe"
 	"text/template/parse"
-	"text/template"
+	"github.com/newestuser/contract-committee/app/pars"
 )
 
 type Account struct {
@@ -32,23 +32,15 @@ type Statement struct {
 }
 
 func main() {
-	fmap := template.FuncMap{
-		"formatAsDollars": formatAsDollars,
-		"formatAsDate": formatAsDate,
+
+	funcMap := pars.FuncMap{
 		"rndStr": rndStr,
 		"savе": save,
 	}
-	t := template.Must(template.New("email.tmpl").Funcs(fmap).Parse("foo:{{$custNum := rndStr}} {{$custNum}}"))
-	 t.Execute(os.Stdout, createMockStatement())
 
-	//funcMap := pars.FuncMap{
-	//	"rndStr": rndStr,
-	//	"savе": save,
-	//}
-
-	//template := pars.NewTemplate("email-test").Funcs(funcMap)
-	//template.Parse("{{$custNum := rndStr}}")
-	//template.Execute()
+	template := pars.NewTemplate("email-test").Funcs(funcMap)
+	template.Parse("{{$custNum := rndStr}}")
+	template.Execute()
 
 	//if err != nil {
 	//	panic(err)

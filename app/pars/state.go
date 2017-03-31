@@ -112,8 +112,8 @@ func (s *state) errorf(format string, args ...interface{}) {
 	if s.node == nil {
 		format = fmt.Sprintf("template: %s: %s", name, format)
 	} else {
-		location, context := s.tmpl.ErrorContext(s.node)
-		format = fmt.Sprintf("template: %s: executing %q at <%s>: %s", location, name, doublePercent(context), format)
+		//location, context := s.tmpl.ErrorContext(s.node)
+		format = fmt.Sprintf("template: %s: executing %q at <%s>: %s", " ", name, doublePercent(""), format)
 	}
 	panic(ExecError{
 		Name: s.tmpl.Name(),
