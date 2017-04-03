@@ -3,6 +3,7 @@ package pars
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
+	"fmt"
 )
 
 func TestVariableCreationAndFunctionPipelining(t *testing.T) {
@@ -10,13 +11,13 @@ func TestVariableCreationAndFunctionPipelining(t *testing.T) {
 
 	funcs := FuncMap{
 		"rndStr":rndStr,
-		"save": assertSave(t, "$custNum", "123"),
+		"save": assertSave(t, "$custNum", "gaga"),
 	}
 
 	tmpl, _ := NewTemplate("foo").Funcs(funcs).Parse(useCase)
 
 	got := tmpl.Execute()
-	want := `"customerNumber":"123"`
+	want := `"customerNumber":"gaga"`
 
 	assert.Equal(t, want, got)
 }
@@ -36,26 +37,23 @@ func TestFunctionExecution(t *testing.T) {
 	assert.Equal(t, want, got)
 }
 
-func TestNewTemplate(t *testing.T) {
-
-
-
-}
 
 func rndStr() string {
+	fmt.Println("================ RND STRING CALLED ==================")
 	return "123"
 }
 
-func assertSave(t *testing.T, wantName, wantVal string) (func(string, string) string) {
-	return func(gotName, gotVal string) string {
-		if wantName != gotName {
-			t.Errorf("wantName: %v gotName: %v", wantName, gotName)
-		}
+func assertSave(t *testing.T, wantName, wantVal string) (func() string) {
+	return func() string {
+		fmt.Println("================ SAVE CALLED ==================")
+		//if wantName != gotName {
+		//	t.Errorf("wantName: %v gotName: %v", wantName, gotName)
+		//}
+		//
+		//if wantVal != gotVal {
+		//	t.Errorf("wantVal: %v gotVal: %v", wantVal, gotVal)
+		//}
 
-		if wantVal != gotVal {
-			t.Errorf("wantVal: %v gotVal: %v", wantVal, gotVal)
-		}
-
-		return gotVal
+		return "gaga"
 	}
 }
