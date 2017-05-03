@@ -70,14 +70,14 @@ func evalBool(typ reflect.Type, n parse.Node) reflect.Value {
 	panic("expected bool; found " + n.String())
 }
 
-func evalString(typ reflect.Type, n parse.Node) reflect.Value {
-	if n, ok := n.(*parse.StringNode); ok {
-		value := reflect.New(typ).Elem()
-		value.SetString(n.Text)
-		return value
-	}
-	panic("expected string; found " + n.String())
-}
+//func evalString(typ reflect.Type, n parse.Node) reflect.Value {
+//	if n, ok := n.(*parse.StringNode); ok {
+//		value := reflect.New(typ).Elem()
+//		value.SetString(n.Text)
+//		return value
+//	}
+//	panic("expected string; found " + n.String())
+//}
 
 func evalInteger(typ reflect.Type, n parse.Node) reflect.Value {
 

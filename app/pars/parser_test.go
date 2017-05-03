@@ -4,49 +4,63 @@ import (
 	"testing"
 	"github.com/stretchr/testify/assert"
 	"fmt"
+	"strings"
 )
 
 func TestVariableCreationAndFunctionPipelining(t *testing.T) {
-	useCase := `"customerNumber":"{{$custNum := rndStr | save}}"`;
+	useCase := `"customerNumber":"{{$custNum := rndStr | toUpper}}"`;
 
 	funcs := FuncMap{
-		"rndStr":rndStr,
-		"save": assertSave(t, "$custNum", "gaga"),
+		"rndStr":fooString,
+		"toUpper": toUpperCase,
 	}
 
-	tmpl, _ := NewTemplate("foo").Funcs(funcs).Parse(useCase)
+	tmpl, _ := NewTemplate("any").Funcs(funcs).Parse(useCase)
 
 	got := tmpl.Execute()
-	want := `"customerNumber":"gaga"`
+	want := `"customerNumber":"FOO"`
 
 	assert.Equal(t, want, got)
 }
+
+//func TestVariableCreation(t *testing.T) {
+//	useCase := `{{$myVar := rndStr}}`
+//
+//	execFuncs := FuncMap{
+//		"rndStr":rndStr,
+//	}
+//	
+//
+//}
 
 func TestFunctionExecution(t *testing.T) {
 	useCase := `"customerNumber":"{{rndStr}}"`;
 
 	funcs := FuncMap{
-		"rndStr":rndStr,
+		"rndStr":fooString,
 	}
 
 	tmpl, _ := NewTemplate("bar").Funcs(funcs).Parse(useCase)
 
 	got := tmpl.Execute()
-	want := `"customerNumber":"123"`
+	want := `"customerNumber":"foo"`
 
 	assert.Equal(t, want, got)
 }
 
-
-func rndStr() string {
+func fooString() string {
 	fmt.Println("================ RND STRING CALLED ==================")
-	return "123"
+	return "foo"
+}
+
+func toUpperCase(str string) string {
+	return strings.ToUpper(str)
 }
 
 func assertSave(t *testing.T, wantName, wantVal string) (func() string) {
 	return func() string {
 		fmt.Println("================ SAVE CALLED ==================")
-		//if wantName != gotName {
+		//if wantName != wantName {
 		//	t.Errorf("wantName: %v gotName: %v", wantName, gotName)
 		//}
 		//
