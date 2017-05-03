@@ -12,9 +12,6 @@ type executor struct {
 	w          io.Writer
 }
 
-
-
-
 // canBeNil reports whether an untyped nil can be assigned to the type. See reflect.Zero.
 func canBeNil(typ reflect.Type) bool {
 	switch typ.Kind() {
@@ -70,17 +67,7 @@ func evalBool(typ reflect.Type, n parse.Node) reflect.Value {
 	panic("expected bool; found " + n.String())
 }
 
-//func evalString(typ reflect.Type, n parse.Node) reflect.Value {
-//	if n, ok := n.(*parse.StringNode); ok {
-//		value := reflect.New(typ).Elem()
-//		value.SetString(n.Text)
-//		return value
-//	}
-//	panic("expected string; found " + n.String())
-//}
-
 func evalInteger(typ reflect.Type, n parse.Node) reflect.Value {
-
 	if n, ok := n.(*parse.NumberNode); ok && n.IsInt {
 		value := reflect.New(typ).Elem()
 		value.SetInt(n.Int64)
@@ -124,12 +111,13 @@ func evalEmptyInterface(dot reflect.Value, n parse.Node) reflect.Value {
 	case *parse.BoolNode:
 		return reflect.ValueOf(n.True)
 	case *parse.DotNode:
-		return dot
+		panic("implement DotNode")
+	//	return dot
 	case *parse.FieldNode:
-		fmt.Println("implement FieldNode")
+		panic("implement FieldNode")
 	//return evalFieldNode(dot, n, nil, zero)
 	case *parse.IdentifierNode:
-		fmt.Println("implement IdentifierNode")
+		panic("implement IdentifierNode")
 	//return evalFunction(dot, n, n, nil, zero)
 	case *parse.NilNode:
 		// NilNode is handled in evalArg, the only place that calls here.
@@ -140,10 +128,10 @@ func evalEmptyInterface(dot reflect.Value, n parse.Node) reflect.Value {
 	case *parse.StringNode:
 		return reflect.ValueOf(n.Text)
 	case *parse.VariableNode:
-		fmt.Println("implement VariableNode")
+		panic("implement VariableNode")
 	//return evalVariableNode(dot, n, nil, zero)
 	case *parse.PipeNode:
-		fmt.Println("implement PipeNode")
+		panic("implement PipeNode")
 	//return evalPipeline(dot, n)
 	}
 	panic("can't handle assignment of " + n.String() + " interface argument")

@@ -82,24 +82,16 @@ func (t *template) writeNode(exec executor, node parse.Node) {
 
 	switch n := node.(type) {
 	case *parse.TextNode:
-		fmt.Println("textNode --")
 		exec.w.Write(n.Text)
 		return
 
 	case *parse.ActionNode:
-		fmt.Println("actionNode --")
-
 		var cmdResult reflect.Value
-		for _, cmd := range n.Pipe.Cmds {
 
+		for _, cmd := range n.Pipe.Cmds {
 			funcName := cmd.Args[0].String()
 			funcArgs := cmd.Args[1:]
-
-			//funcToEval := reflect.ValueOf(exec.parseFuncs[funcName])
-
 			cmdResult = exec.execFunc(funcName, funcArgs, cmdResult)
-			fmt.Println("funcName", funcName, "funcArgs", funcArgs, "result", cmdResult)
-
 		}
 
 		exec.printValue(cmdResult)
@@ -107,6 +99,7 @@ func (t *template) writeNode(exec executor, node parse.Node) {
 		for i, cmd := range n.Pipe.Decl {
 			fmt.Println("pipe decl indent", i, cmd.Ident)
 		}
+
 		return
 	}
 }
@@ -116,26 +109,6 @@ func (e *executor) execFunc(funcName string, args []parse.Node, prevCmdResult re
 
 	return e.evalCall(funcName, funcToEval, args, prevCmdResult)
 }
-
-//
-//func (e *executor) execFunc(funcName string, args []parse.Node) reflect.Value {
-//	funcToEval := reflect.ValueOf(e.parseFuncs[funcName])
-//
-//
-//	for _, cmd := range pipe.Cmds {
-//		value = s.evalCommand(dot, cmd, value) // previous value is this one's final arg.
-//		// If the object has type interface{}, dig down one level to the thing inside.
-//		if value.Kind() == reflect.Interface && value.Type().NumMethod() == 0 {
-//			value = reflect.ValueOf(value.Interface()) // lovely!
-//		}
-//	}
-//	for _, variable := range pipe.Decl {
-//		s.push(variable.Ident[0], value)
-//	}
-//
-//
-//	return e.evalCall(funcToEval, args)
-//}
 
 func (e *executor) printValue(v reflect.Value) {
 	pval, ok := printableValue(v)
@@ -185,8 +158,6 @@ func (e *executor) evalCall(funName string, fun reflect.Value, funArgs[]parse.No
 		numIn++
 	}
 
-	fmt.Println("args", funArgs, "prevResult", prevFunResult)
-
 	if numIn < funType.NumIn() - 1 || !funType.IsVariadic() && numIn != funType.NumIn() {
 		panic(fmt.Sprintf("wrong number of args for %s: want %d got %d", funName, funType.NumIn(), numFixed))
 	}
@@ -201,7 +172,6 @@ func (e *executor) evalCall(funName string, fun reflect.Value, funArgs[]parse.No
 
 	i := 0
 	for ; i < numIn && i < numFixed; i++ {
-		fmt.Println("iterating ================@KEL@J!#KLJ!@KL#@J!LK#J@L!KJ@#KL!")
 		argv[i] = evalArg(funType.In(i), funArgs[i])
 	}
 
@@ -226,7 +196,6 @@ func (e *executor) evalCall(funName string, fun reflect.Value, funArgs[]parse.No
 	result := fun.Call(argv)
 	return result[0]
 }
-
 
 
 // goodFunc reports whether the function or method has the right result signature.
@@ -323,38 +292,25 @@ func evalArg(typ reflect.Type, n parse.Node) reflect.Value {
 	//	return s.validateType(s.evalChainNode(dot, arg, nil, zero), typ)
 	}
 	switch typ.Kind() {
-	//case reflect.Bool:
-	//	return s.evalBool(typ, n)
-	//case reflect.Complex64, reflect.Complex128:
-	//	return s.evalComplex(typ, n)
-	//case reflect.Float32, reflect.Float64:
-	//	return s.evalFloat(typ, n)
-	//case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-	//	return s.evalInteger(typ, n)
+	case reflect.Bool:
+		return evalBool(typ, n)
+	case reflect.Complex64, reflect.Complex128:
+		return evalComplex(typ, n)
+	case reflect.Float32, reflect.Float64:
+		return evalFloat(typ, n)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return evalInteger(typ, n)
 	//case reflect.Interface:
 	//	if typ.NumMethod() == 0 {
 	//		return s.evalEmptyInterface(dot, n)
 	//	}
 	case reflect.String:
 		return evalString(typ, n)
-	//case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-	//	return s.evalUnsignedInteger(typ, n)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return evalUnsignedInteger(typ, n)
 	}
 	panic(fmt.Sprintf("can't handle %s for arg of type %s", n, typ))
 }
-
-
-
-//func evalBool(typ reflect.Type, n parse.Node) reflect.Value {
-//	s.at(n)
-//	if n, ok := n.(*parse.BoolNode); ok {
-//		value := reflect.New(typ).Elem()
-//		value.SetBool(n.True)
-//		return value
-//	}
-//	s.errorf("expected bool; found %s", n)
-//	panic("not reached")
-//}
 
 func evalString(typ reflect.Type, n parse.Node) reflect.Value {
 	//s.at(n)
@@ -364,65 +320,8 @@ func evalString(typ reflect.Type, n parse.Node) reflect.Value {
 		return value
 	}
 
-	fmt.Println(" EVAL STRING WAS CALLED YAYYY ==============")
 	panic(fmt.Sprintf("expected string; found %s", n))
 }
-//
-//func evalInteger(typ reflect.Type, n parse.Node) reflect.Value {
-//	s.at(n)
-//	if n, ok := n.(*parse.NumberNode); ok && n.IsInt {
-//		value := reflect.New(typ).Elem()
-//		value.SetInt(n.Int64)
-//		return value
-//	}
-//	panic(fmt.Sprintf("expected integer; found %s", n))
-//}
-//
-//func evalUnsignedInteger(typ reflect.Type, n parse.Node) reflect.Value {
-//	s.at(n)
-//	if n, ok := n.(*parse.NumberNode); ok && n.IsUint {
-//		value := reflect.New(typ).Elem()
-//		value.SetUint(n.Uint64)
-//		return value
-//	}
-//	panic(fmt.Sprintf("expected unsigned integer; found %s", n))
-//}
-//
-//func evalFloat(typ reflect.Type, n parse.Node) reflect.Value {
-//	s.at(n)
-//	if n, ok := n.(*parse.NumberNode); ok && n.IsFloat {
-//		value := reflect.New(typ).Elem()
-//		value.SetFloat(n.Float64)
-//		return value
-//	}
-//	panic(fmt.Sprintf("expected float; found %s", n))
-//}
-
-func printNodeStuff(node parse.Node) {
-
-	switch n := node.(type) {
-	case *parse.TextNode:
-		fmt.Println("textNode--")
-		fmt.Println(string(n.Text))
-		return
-
-	case *parse.ActionNode:
-		fmt.Println("actionNode --")
-		for i, cmd := range n.Pipe.Cmds {
-			fmt.Println("pipe cmd", i, cmd)
-			fmt.Println("pipe cmd args", i, cmd.Args)
-		}
-
-		for i, cmd := range n.Pipe.Decl {
-			fmt.Println("pipe decl indent", i, cmd.Ident)
-		}
-		return
-	}
-
-	fmt.Println("NODE:", node)
-	fmt.Println("NODE Type:", node.Type())
-}
-
 
 // indirect returns the item at the end of indirection, and a bool to indicate if it's nil.
 func indirect(v reflect.Value) (rv reflect.Value, isNil bool) {
