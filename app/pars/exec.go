@@ -9,8 +9,152 @@ import (
 
 type executor struct {
 	parseFuncs map[string]interface{}
+	varFuncs map[string]interface{}
 	w          io.Writer
 }
+
+
+
+func (e *executor) execFunc(funcName string, varNames []*parse.VariableNode, args []parse.Node, prevCmdResult reflect.Value) reflect.Value {
+	//var funcToEval reflect.Value
+
+	parseFunc, parseOk := e.parseFuncs[funcName]
+	if (parseOk) {
+		funcToEval := reflect.ValueOf(parseFunc)
+		return e.evalCall(funcName, funcToEval, args, prevCmdResult)
+	}
+
+	varFunc, varOk := e.varFuncs[funcName]
+	if (varOk) {
+		funcToEval := reflect.ValueOf(varFunc)
+		return e.evalVarCall(funcName, funcToEval, varNames[0], args, prevCmdResult)
+	}
+
+	panic(fmt.Sprintf("can't find function '%s' to execute", funcName))
+}
+
+func (e *executor) printValue(v reflect.Value) {
+	pval, ok := printableValue(v)
+	if !ok {
+		panic("cant print value")
+	}
+
+	_, err := fmt.Fprint(e.w, pval)
+	if err != nil {
+		panic("cant write value")
+	}
+}
+
+func (e *executor) evalCall(funName string, fun reflect.Value, funArgs[]parse.Node, prevFunResult reflect.Value) reflect.Value {
+	funType := fun.Type()
+
+	if funType.IsVariadic() {
+		panic("variadic functions are not supported")
+	}
+
+	numIn := len(funArgs)
+	numFixed := len(funArgs)
+	if (prevFunResult.IsValid()) {
+		numIn++
+	}
+
+	if numIn < funType.NumIn() - 1 || !funType.IsVariadic() && numIn != funType.NumIn() {
+		panic(fmt.Sprintf("wrong number of args for %s: want %d got %d", funName, funType.NumIn(), numFixed))
+	}
+
+	if !goodFunc(funType) {
+		panic(fmt.Sprintf("can't call method/function %q with %d results", funName, funType.NumOut()))
+	}
+
+	// Build the arg list.
+	argv := make([]reflect.Value, numIn)
+	// Args must be evaluated.
+
+	i := 0
+	for ; i < numIn && i < numFixed; i++ {
+		argv[i] = evalArg(funType.In(i), funArgs[i])
+	}
+
+	// Add final value if necessary.
+	if prevFunResult.IsValid() {
+		t := funType.In(funType.NumIn() - 1)
+		//if funType.IsVariadic() {
+		//	panic()
+		//if numIn-1 < numFixed {
+		//	 The added final argument corresponds to a fixed parameter of the function.
+		//	 Validate against the type of the actual parameter.
+		//t = typ.In(numIn - 1)
+		//} else {
+		//	 The added final argument corresponds to the variadic part.
+		//	 Validate against the type of the elements of the variadic slice.
+		//t = t.Elem()
+		//}
+		//}
+		argv[i] = validateType(prevFunResult, t)
+	}
+
+	result := fun.Call(argv)
+	return result[0]
+}
+
+func (e *executor) evalVarCall(funName string, fun reflect.Value, varName *parse.VariableNode, funArgs[]parse.Node, prevFunResult reflect.Value) reflect.Value {
+	funType := fun.Type()
+
+	if funType.IsVariadic() {
+		panic("variadic functions are not supported")
+	}
+
+	numIn := len(funArgs) + 1 // +1 because function name will be passed also as an argument
+	numFixed := len(funArgs)
+	if (prevFunResult.IsValid()) {
+		numIn++
+	}
+
+	fmt.Println("numIn", numIn, "numFixed", numFixed)
+	if numIn < funType.NumIn() - 1 || !funType.IsVariadic() && numIn != funType.NumIn() {
+		panic(fmt.Sprintf("wrong number of args for %s: want %d got %d", funName, funType.NumIn(), numFixed))
+	}
+
+	if !goodFunc(funType) {
+		panic(fmt.Sprintf("can't call method/function %q with %d results", funName, funType.NumOut()))
+	}
+
+	// Build the arg list.
+	argv := make([]reflect.Value, numIn)
+	// Args must be evaluated.
+
+	i := 0
+	for ; i < numIn && i < numFixed; i++ {
+		argv[i] = evalArg(funType.In(i), funArgs[i])
+	}
+
+	// Add final value if necessary.
+	if prevFunResult.IsValid() {
+		t := funType.In(funType.NumIn() - 2)
+		//if funType.IsVariadic() {
+		//	panic()
+		//if numIn-1 < numFixed {
+		//	 The added final argument corresponds to a fixed parameter of the function.
+		//	 Validate against the type of the actual parameter.
+		//t = typ.In(numIn - 1)
+		//} else {
+		//	 The added final argument corresponds to the variadic part.
+		//	 Validate against the type of the elements of the variadic slice.
+		//t = t.Elem()
+		//}
+		//}
+		argv[i] = validateType(prevFunResult, t)
+		i++
+	}
+
+	varNameArg := reflect.ValueOf(varName.String())
+	t := funType.In(funType.NumIn() - 1)
+	argv[i] = validateType(varNameArg, t)
+
+	result := fun.Call(argv)
+	return result[0]
+}
+
 
 // canBeNil reports whether an untyped nil can be assigned to the type. See reflect.Zero.
 func canBeNil(typ reflect.Type) bool {
@@ -103,36 +247,4 @@ func evalComplex(typ reflect.Type, n parse.Node) reflect.Value {
 		return value
 	}
 	panic("expected complex; found " + n.String())
-}
-
-func evalEmptyInterface(dot reflect.Value, n parse.Node) reflect.Value {
-
-	switch n := n.(type) {
-	case *parse.BoolNode:
-		return reflect.ValueOf(n.True)
-	case *parse.DotNode:
-		panic("implement DotNode")
-	//	return dot
-	case *parse.FieldNode:
-		panic("implement FieldNode")
-	//return evalFieldNode(dot, n, nil, zero)
-	case *parse.IdentifierNode:
-		panic("implement IdentifierNode")
-	//return evalFunction(dot, n, n, nil, zero)
-	case *parse.NilNode:
-		// NilNode is handled in evalArg, the only place that calls here.
-		panic("evalEmptyInterface: nil (can't happen)")
-	case *parse.NumberNode:
-		fmt.Println("implemenet NumberNode")
-	//return idealConstant(n)
-	case *parse.StringNode:
-		return reflect.ValueOf(n.Text)
-	case *parse.VariableNode:
-		panic("implement VariableNode")
-	//return evalVariableNode(dot, n, nil, zero)
-	case *parse.PipeNode:
-		panic("implement PipeNode")
-	//return evalPipeline(dot, n)
-	}
-	panic("can't handle assignment of " + n.String() + " interface argument")
 }

@@ -131,6 +131,36 @@ func TestFunctionExecutionWithFloatArguments(t *testing.T) {
 	assert.Equal(t, want, got)
 }
 
+func TestVariableCreation(t *testing.T) {
+	useCase := `{{$foo := rndStr | save}}`;
+
+	funcs := FuncMap{
+		"rndStr":returnStr("bar"),
+	}
+
+	var varName string
+	var value string
+
+	varFuncs := VarFuncMap{
+		"save":func(val string, name string) string {
+			value = val
+			varName = name
+			return value
+		},
+	}
+
+	tmpl, _ := NewTemplate("tmpl").Funcs(funcs).VarFuncs(varFuncs).Parse(useCase)
+	got := tmpl.Execute()
+
+	wantResult := "bar"
+	wantVal := "bar"
+	wantName := "$foo"
+
+	assert.Equal(t, wantResult, got)
+	assert.Equal(t, wantName, varName)
+	assert.Equal(t, wantVal, value)
+}
+
 func TestPipeliningConcreteValue(t *testing.T) {
 	useCase := `{{true | invert}}`
 
