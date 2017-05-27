@@ -1,6 +1,8 @@
 package app
 
-import "github.com/clouway/cloudplatform/task-queue/datastore/mongo"
+import (
+	"github.com/newestuser/contract-committee/app/datastore"
+)
 
 type NewTest struct {
 	Name string
@@ -16,13 +18,13 @@ type Committee interface {
 }
 
 type persistentCommittee struct {
-	db *mongo.Database
+	db datastore.DB
 }
 
 func (c *persistentCommittee) RegisterTest(t *NewTest) *Test {
 	return &Test{}
 }
 
-func NewCommittee(db *mongo.Database) Committee {
+func NewCommittee(db datastore.DB) Committee {
 	return &persistentCommittee{db:db}
 }

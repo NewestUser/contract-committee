@@ -4,7 +4,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"time"
 
-	"github.com/clouway/cloudplatform/datastore"
+	"github.com/newestuser/contract-committee/app/datastore"
 )
 
 // Config is the database configuration which is used for initialisation of the datastore.

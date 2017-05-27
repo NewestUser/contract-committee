@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"gopkg.in/mgo.v2"
-
-	"github.com/clouway/cloudplatform/datastore"
-	"github.com/clouway/cloudplatform/datastore/mongo"
+	"github.com/newestuser/contract-committee/app/datastore"
+	"github.com/newestuser/contract-committee/app/datastore/mongo"
 )
 
 type DB struct {
