@@ -16,14 +16,14 @@ type fakeCommittee struct {
 	mock.Mock
 }
 
-func (f *fakeCommittee) RegisterTest(t *app.NewTest) *app.Test {
-	return f.Called(t).Get(0).(*app.Test)
+func (f *fakeCommittee) RegisterTest(t *app.NewSuite) *app.Suite {
+	return f.Called(t).Get(0).(*app.Suite)
 }
 
 func TestRegisterTest(t *testing.T) {
 	dto := newTestDTO{Name: "my-test"}
-	testReq := &app.NewTest{Name:dto.Name}
-	testResp := &app.Test{ID:"id", Name:dto.Name}
+	testReq := &app.NewSuite{Name:dto.Name}
+	testResp := &app.Suite{ID:"id", Name:dto.Name}
 
 	request := createJSONRequest(dto)
 	recorder := httptest.NewRecorder()

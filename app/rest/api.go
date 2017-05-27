@@ -7,17 +7,16 @@ import (
 	"encoding/json"
 )
 
-func RegisterTest(c app.Committee) http.HandlerFunc {
+func RegisterTest(s app.Suite) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		dto := &newTestDTO{}
 		readJSON(r.Body, dto)
 
-		newTest := &app.NewTest{Name:dto.Name}
-		createdTest := c.RegisterTest(newTest)
+		newTest := &app.NewSuite{Name:dto.Name}
+		createdTest, _ := s.RegisterTest(newTest) // TODO (mzlatev) take care of error response
 
 		respDTO := &testDTO{ID:createdTest.ID, Name:createdTest.Name}
 		writeJSON(w, respDTO)
-
 	}
 }
 
