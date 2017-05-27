@@ -1,9 +1,5 @@
 package app
 
-import (
-	"github.com/newestuser/contract-committee/app/datastore"
-)
-
 type NewTest struct {
 	Name string
 }
@@ -18,13 +14,15 @@ type Committee interface {
 }
 
 type persistentCommittee struct {
-	db datastore.DB
+	repo TestStorage
 }
 
 func (c *persistentCommittee) RegisterTest(t *NewTest) *Test {
-	return &Test{}
+	id := c.repo.Register(t)
+	
+	return &Test{Name:t.Name, ID:id}
 }
 
-func NewCommittee(db datastore.DB) Committee {
-	return &persistentCommittee{db:db}
+func NewCommittee(repo TestStorage) Committee {
+	return &persistentCommittee{repo:repo}
 }

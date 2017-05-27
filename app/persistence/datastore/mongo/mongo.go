@@ -33,18 +33,18 @@ type mongoDB struct {
 
 // New creates a new datastore by using the provided configuration.
 func NewDatabase(c Config) datastore.DB {
-	s := connect(c.Hosts)
-	d := s.DB(c.DBName)
+	//s := connect(c.Hosts)
+	//d := s.DB(c.DBName)
+	//
+	//db := &mongoDB{database: d, session: s}
+	//
+	//err := db.buildIndexes(c.Indexes)
+	//
+	//if err != nil {
+	//	panic(err)
+	//}
 
-	db := &mongoDB{database: d, session: s}
-
-	err := db.buildIndexes(c.Indexes)
-
-	if err != nil {
-		panic(err)
-	}
-
-	return db
+	return nil
 }
 
 func (d *mongoDB) C(name string) datastore.Collection {

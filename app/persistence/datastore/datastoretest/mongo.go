@@ -16,7 +16,7 @@ type DB struct {
 }
 
 func NewDatabase() *DB {
-	c := mongo.Config{Hosts: []string{"dev.telcong.com"}, DBName: "testDb", Indexes: []*mongo.Index{}}
+	c := mongo.Config{Hosts: []string{"localhost"}, DBName: "testDb", Indexes: []*mongo.Index{}}
 
 	mgoDB := mongo.NewDatabase(c)
 

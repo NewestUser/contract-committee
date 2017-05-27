@@ -6,6 +6,7 @@ import (
 	"github.com/newestuser/contract-committee/app/rest"
 	"github.com/newestuser/contract-committee/app"
 	"github.com/newestuser/contract-committee/app/datastore/mongo"
+	"fmt"
 )
 
 func main() {
@@ -19,5 +20,7 @@ func main() {
 
 	r.Handle("/tests", rest.RegisterTest(committee)).Methods("POST")
 
+	go fmt.Println("contract-committee started on 8080")
+	
 	http.ListenAndServe(":8080", r)
 }
