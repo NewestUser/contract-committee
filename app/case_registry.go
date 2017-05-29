@@ -1,41 +1,29 @@
 package app
 
-type Given struct {
-	URL    string
-	Method string
-	Body   interface{}
-}
-
-type Assertion struct {
-	StatusCode int
-	Body       interface{}
-}
-
-type NewCase struct {
-	GivenReq   *Given
-	AssertResp *Assertion
-}
-
-type Case struct {
-	ID string
-	*NewCase
-}
+import (
+	"github.com/newestuser/contract-committee/app/assert"
+)
 
 type CaseRegistry interface {
-	RegisterCase(suiteID string, c *NewCase) *Case
+	RegisterCase(suiteID string, c *assert.NewCase) (*assert.Case, error)
 }
 
-func NewCaseRegistry(s CaseStorage) CaseRegistry {
-	return &persistentCaseRegistry{storage:s}
+func NewCaseRegistry(v assert.Validator, s CaseStorage) CaseRegistry {
+	return &persistentCaseRegistry{validator:v, storage:s}
 }
 
 type persistentCaseRegistry struct {
-	storage CaseStorage
+	storage   CaseStorage
+	validator assert.Validator
 }
 
-func (r *persistentCaseRegistry) RegisterCase(suiteID string, c *NewCase) *Case {
+func (r *persistentCaseRegistry) RegisterCase(suiteID string, c *assert.NewCase) (*assert.Case, error) {
+
+	if err := r.validator.Valid(c); err != nil {
+		return nil, BadReqErr("Cannot create invalid case: %s", err.Error())
+	}
 
 	id := r.storage.Register(suiteID, c)
 
-	return &Case{ID:id, NewCase:c}
+	return &assert.Case{ID:id, NewCase:c}, nil
 }

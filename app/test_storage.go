@@ -1,5 +1,7 @@
 package app
 
+import "github.com/newestuser/contract-committee/app/assert"
+
 type SuiteStorage interface {
 	Register(t *NewSuite) string
 
@@ -9,5 +11,5 @@ type SuiteStorage interface {
 }
 
 type CaseStorage interface {
-	Register(suiteID string, c *NewCase) string
+	Register(suiteID string, c *assert.NewCase) string
 }
